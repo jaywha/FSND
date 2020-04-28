@@ -5,7 +5,7 @@
 	<div class="col-sm-6">
 		<h1 class="monospace">
 			{{ venue.name }}
-		</h1> <button id="delete-venue" data-id="{{ venue.id }}" style="color: red">&cross; Delete Venue</button>
+		</h1> <button id="delete-venue" data-id="{{ venue.id }}" onclick="DeleteListener()" style="color: red">&cross; Delete Venue</button>
 		<p class="subtitle">
 			ID: {{ venue.id }}
 		</p>
@@ -75,8 +75,8 @@
 	</div>
 </section>
 <script>
-document.getElementById("delete-venue").onclick = function(e) {
-    const venueId = e.target.dataset['id'];
+DeleteListener = function(e) {
+    const venueId = document.getElementById("delete-venue").dataset['id'];
     fetch('/venues/' + venueId, {
         method: 'DELETE'
     })
