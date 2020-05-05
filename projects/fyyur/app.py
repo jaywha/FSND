@@ -139,7 +139,7 @@ def format_datetime(value, date_format='medium'):
     elif date_format == 'medium':
         date_format = "EE MM, dd, y h:mma"
     elif date_format == 'showtime':
-        date_format = "yyyy-MM-dd hh:mm:ss"
+        date_format = "yyyy-MM-ddThh:mm"
     return babel.dates.format_datetime(date, date_format)
 
 
@@ -391,7 +391,6 @@ def delete_artist(artist_id):
 #  ----------------------------------------------------------------
 @app.route('/artists/<artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
-    form = ArtistForm()
     sql_data = Artist.query.get(artist_id)
 
     artist = {
@@ -407,6 +406,8 @@ def edit_artist(artist_id):
         "seeking_description": sql_data.seeking_description,
         "image_link": sql_data.image_link
     }
+
+    form = ArtistForm(genres=artist["genres"])
 
     return render_template('forms/edit_artist.html', form=form, artist=artist)
 
@@ -582,7 +583,7 @@ def create_show_submission():
         show.artist_image_link = artist.image_link
         show.venue_name = venue.name
 
-        if datetime.strptime(show.start_time, "%Y-%m-%d %H:%M:%S") >= datetime.now():
+        if datetime.strptime(show.start_time, "%Y-%m-%dT%H:%M") >= datetime.now():
             artist.upcoming_shows.append(show)
             if artist.upcoming_shows_count is None:
                 artist.upcoming_shows_count = 1
@@ -632,8 +633,26 @@ def create_show_submission():
 def delete_show(show_id):
     try:
         show = Show.query.get(show_id)
+        artist = Artist.query.get(show.artist_id)
+        venue = Venue.query.get(show.venue_id)
+
+        if artist.upcoming_shows.__contains__(show):
+            artist.upcoming_shows.remove(show)
+            artist.upcoming_shows_count -= 1
+        elif artist.past_shows.__contains__(show):
+            artist.past_shows.remove(show)
+            artist.past_shows_count -= 1
+
+        if venue.upcoming_shows.__contains__(show):
+            venue.upcoming_shows.remove(show)
+            venue.upcoming_shows_count -= 1
+        elif venue.past_shows.__contains__(show):
+            venue.past_shows.remove(show)
+            venue.past_shows_count -= 1
 
         db.session.delete(show)
+        db.session.add(artist)
+        db.session.add(venue)
         db.session.commit()
     except:
         db.session.rollback()

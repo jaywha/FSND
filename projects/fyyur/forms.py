@@ -1,10 +1,43 @@
 from datetime import datetime
-from flask_wtf import Form
-from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField
+from flask_wtf import FlaskForm
+from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, widgets
+from wtforms.widgets import html_params, HTMLString
 from wtforms.validators import DataRequired, AnyOf, URL
 
+# Utilities
+# =========================================================================
 
-class ShowForm(Form):
+
+class DateTimePickerWidget(object):
+    """
+    Date Time picker from Eonasdan GitHub
+    """
+
+    data_template = (
+        '<div class="input-group date appbuilder_datetime" id="datetimepicker">'
+        '<span class="input-group-addon"><i class="fa fa-calendar cursor-hand"></i>'
+        "</span>"
+        '<input type="datetime-local" class="form-control" data-format="yyyy-MM-dd hh:mm:ss" %(text)s />'
+        "</div>"
+    )
+
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault("id", field.id)
+        kwargs.setdefault("name", field.name)
+        if not field.data:
+            field.data = ""
+        template = self.data_template
+
+        return HTMLString(
+            template % {"text": html_params(type="text", value=field.data, **kwargs)}
+        )
+
+
+# Forms
+# =========================================================================
+
+
+class ShowForm(FlaskForm):
     artist_id = StringField(
         'artist_id'
     )
@@ -14,11 +47,12 @@ class ShowForm(Form):
     start_time = DateTimeField(
         'start_time',
         validators=[DataRequired()],
-        default=datetime.today()
+        default=datetime.today(),
+        widget=DateTimePickerWidget()
     )
 
 
-class VenueForm(Form):
+class VenueForm(FlaskForm):
     name = StringField(
         'name', validators=[DataRequired()]
     )
@@ -120,7 +154,7 @@ class VenueForm(Form):
     )
 
 
-class ArtistForm(Form):
+class ArtistForm(FlaskForm):
     name = StringField(
         'name', validators=[DataRequired()]
     )
@@ -188,7 +222,7 @@ class ArtistForm(Form):
         'phone'
     )
     image_link = StringField(
-        'image_link'
+        'image_link', validators=[URL()]
     )
     genres = SelectMultipleField(
         # TODO implement enum restriction
@@ -219,5 +253,7 @@ class ArtistForm(Form):
         # TODO implement enum restriction
         'facebook_link', validators=[URL()]
     )
+    website = StringField(
+        'website', validators=[URL()]
+    )
 
-# TODO IMPLEMENT NEW ARTIST FORM AND NEW SHOW FORM

@@ -24,7 +24,6 @@ for (let b = 0; b < deleteButtons.length; b++) {
     const button = deleteButtons[b];
     button.onclick = function(e) {
         const show_id = e.target.dataset['id'];
-        alert("Show id is: " + show_id)
         fetch('/shows/' + show_id, {
             method: 'DELETE'
         })

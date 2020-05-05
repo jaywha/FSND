@@ -5,7 +5,9 @@
 	<div class="col-sm-6">
 		<h1 class="monospace">
 			{{ venue.name }}
-		</h1> <button class="delete-venue" data-id="{{ venue.id }}" style="color: #ff0000">&cross; Delete Venue</button>
+		</h1>
+        <button class="delete-venue" data-id="{{ venue.id }}" style="color: #ff0000">&cross; Delete Venue</button>
+        <button class="edit-venue" data-id="{{ venue.id }}" style="color: dodgerblue">&para; Edit Venue </button>
 		<p class="subtitle">
 			ID: {{ venue.id }}
 		</p>
@@ -76,12 +78,23 @@
 </section>
 <script>
 const deleteButtons = document.querySelectorAll('.delete-venue');
-for (let b = 0; b < deleteButtons.length; b++) {
-    const button = deleteButtons[b];
+for (let bd = 0; bd < deleteButtons.length; bd++) {
+    const button = deleteButtons[bd];
     button.onclick = function(e) {
         const venue_id = e.target.dataset['id'];
         fetch('/venues/' + venue_id, {
             method: 'DELETE'
+        })
+    }
+}
+
+const editButtons = document.querySelectorAll('.edit-venue');
+for (let be = 0; be < editButtons.length; be++) {
+    const button = editButtons[be];
+    button.onclick = function(e) {
+        const venue_id = e.target.dataset['id'];
+        fetch('/venues/' + venue_id + '/edit', {
+            method: 'GET'
         })
     }
 }

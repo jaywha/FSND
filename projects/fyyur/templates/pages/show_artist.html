@@ -5,7 +5,9 @@
 	<div class="col-sm-6">
 		<h1 class="monospace">
 			{{ artist.name }}
-		</h1> <button class="delete-artist" data-id="{{ artist.id }}" style="color: #ff0000">&cross; Delete Artist</button>
+		</h1>
+        <button class="delete-artist" data-id="{{ artist.id }}" style="color: #ff0000">&cross; Delete Artist</button>
+        <button class="edit-artist" data-id="{{ artist.id }}" style="color: dodgerblue">&para; Edit Artist </button>
 		<p class="subtitle">
 			ID: {{ artist.id }}
 		</p>
@@ -73,12 +75,23 @@
 </section>
 <script>
 const deleteButtons = document.querySelectorAll('.delete-artist');
-for (let b = 0; b < deleteButtons.length; b++) {
-    const button = deleteButtons[b];
+for (let bd = 0; bd < deleteButtons.length; bd++) {
+    const button = deleteButtons[bd];
     button.onclick = function(e) {
         const artist_id = e.target.dataset['id'];
         fetch('/artists/' + artist_id, {
             method: 'DELETE'
+        })
+    }
+}
+
+const editButtons = document.querySelectorAll('.edit-artist');
+for (let be = 0; be < editButtons.length; be++) {
+    const button = editButtons[be];
+    button.onclick = function(e) {
+        const artist_id = e.target.dataset['id'];
+        fetch('/artists/' + artist_id + '/edit', {
+            method: 'GET'
         })
     }
 }
