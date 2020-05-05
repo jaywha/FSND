@@ -6,7 +6,11 @@
     <div class="col-sm-4">
         <div class="tile tile-show">
             <img src="{{ show.artist_image_link }}" alt="Artist Image" />
-            <h4>{{ show.start_time|datetime('full') }}</h4>
+            <button class="delete-show" data-id="{{ show.id }}"
+                    style="color:red; position:absolute; top:5px; right:20px;">
+                &cross;
+            </button>
+            <h4>{{ show.start_time|datetime('showtime') }}</h4>
             <h5><a href="/artists/{{ show.artist_id }}">{{ show.artist_name }}</a></h5>
             <p>playing at</p>
             <h5><a href="/venues/{{ show.venue_id }}">{{ show.venue_name }}</a></h5>
@@ -14,4 +18,17 @@
     </div>
     {% endfor %}
 </div>
+<script>
+const deleteButtons = document.querySelectorAll('.delete-show');
+for (let b = 0; b < deleteButtons.length; b++) {
+    const button = deleteButtons[b];
+    button.onclick = function(e) {
+        const show_id = e.target.dataset['id'];
+        alert("Show id is: " + show_id)
+        fetch('/shows/' + show_id, {
+            method: 'DELETE'
+        })
+    }
+}
+</script>
 {% endblock %}

@@ -31,14 +31,31 @@ migrate = Migrate(app, db)
 # Models.
 # ----------------------------------------------------------------------------#
 
-ShowToArtist_Association = db.Table('ShowToArtist',
-                                    db.Column('show_id', db.Integer, db.ForeignKey('Show.id'), primary_key=True),
-                                    db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id'), primary_key=True))
+UpcomingShowToArtist_Association = db.Table('UpcomingShowToArtist',
+                                            db.Column('show_id', db.Integer,
+                                                      db.ForeignKey('Show.id'), primary_key=True),
+                                            db.Column('artist_id', db.Integer,
+                                                      db.ForeignKey('Artist.id'), primary_key=True))
 
 
-ShowToVenue_Association = db.Table('ShowToVenue',
-                                   db.Column('show_id', db.Integer, db.ForeignKey('Show.id'), primary_key=True),
-                                   db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True))
+UpcomingShowToVenue_Association = db.Table('UpcomingShowToVenue',
+                                           db.Column('show_id', db.Integer,
+                                                     db.ForeignKey('Show.id'), primary_key=True),
+                                           db.Column('venue_id', db.Integer,
+                                                     db.ForeignKey('Venue.id'), primary_key=True))
+
+PastShowToArtist_Association = db.Table('PastShowToArtist',
+                                        db.Column('show_id', db.Integer,
+                                                  db.ForeignKey('Show.id'), primary_key=True),
+                                        db.Column('artist_id', db.Integer,
+                                                  db.ForeignKey('Artist.id'), primary_key=True))
+
+
+PastShowToVenue_Association = db.Table('PastShowToVenue',
+                                       db.Column('show_id', db.Integer,
+                                                 db.ForeignKey('Show.id'), primary_key=True),
+                                       db.Column('venue_id', db.Integer,
+                                                 db.ForeignKey('Venue.id'), primary_key=True))
 
 
 class Venue(db.Model):
@@ -56,10 +73,12 @@ class Venue(db.Model):
     facebook_link = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(240))
-    upcoming_shows = db.relationship('Show', secondary=ShowToVenue_Association,
-                                     backref=db.backref('venue', lazy=True))
-    upcoming_shows_count = db.Column(db.Integer)
-    past_shows_count = db.Column(db.Integer)
+    upcoming_shows = db.relationship('Show', secondary=UpcomingShowToVenue_Association,
+                                     backref=db.backref('upcoming_venue', lazy=True))
+    upcoming_shows_count = db.Column(db.Integer, server_default="0")
+    past_shows = db.relationship('Show', secondary=PastShowToVenue_Association,
+                                 backref=db.backref('past_venue', lazy=True))
+    past_shows_count = db.Column(db.Integer, server_default="0")
 
     def __repr__(self):
         return f'<Venue {self.id} {self.name} {self.city} {self.state}>'
@@ -79,11 +98,12 @@ class Artist(db.Model):
     facebook_link = db.Column(db.String(500))
     seeking_venue = db.Column(db.Boolean)
     seeking_description = db.Column(db.String(240))
-    upcoming_shows = db.relationship('Show', secondary=ShowToArtist_Association,
-                                     backref=db.backref('artist', lazy=True))
-    upcoming_shows_count = db.Column(db.Integer)
-    past_shows_count = db.Column(db.Integer)
-    # past_shows = ?
+    upcoming_shows = db.relationship('Show', secondary=UpcomingShowToArtist_Association,
+                                     backref=db.backref('upcoming_artist', lazy=True))
+    upcoming_shows_count = db.Column(db.Integer, server_default="0")
+    past_shows = db.relationship('Show', secondary=PastShowToArtist_Association,
+                                 backref=db.backref('past_artist', lazy=True))
+    past_shows_count = db.Column(db.Integer, server_default="0")
 
     def __repr__(self):
         return f'<Artist {self.id} {self.name}>'
@@ -99,15 +119,18 @@ class Show(db.Model):
     venue_id = db.Column(db.Integer)
     venue_name = db.Column(db.String)
     venue_image_link = db.Column(db.String)
-    start_time = db.Column(db.DateTime)
+    start_time = db.Column(db.String)
 
     def __repr__(self):
         return f'<Show {self.id} {self.artist_id} {self.venue_id}>'
 
 
+db.create_all()
+
 # ----------------------------------------------------------------------------#
 # Filters.
 # ----------------------------------------------------------------------------#
+
 
 def format_datetime(value, date_format='medium'):
     date = dateutil.parser.parse(value)
@@ -115,6 +138,8 @@ def format_datetime(value, date_format='medium'):
         date_format = "EEEE MMMM, d, y 'at' h:mma"
     elif date_format == 'medium':
         date_format = "EE MM, dd, y h:mma"
+    elif date_format == 'showtime':
+        date_format = "yyyy-MM-dd hh:mm:ss"
     return babel.dates.format_datetime(date, date_format)
 
 
@@ -199,8 +224,29 @@ def ignore_null_venue_route():
 @app.route('/venues/<venue_id>')
 def show_venue(venue_id):
     # shows the venue page with the given venue_id
-    v = Venue.query.get(venue_id)
-    return render_template('pages/show_venue.html', venue=v)
+    sql_data = Venue.query.get(venue_id)
+
+    venue = {
+        "id": sql_data.id,
+        "name": sql_data.name,
+        "genres": [],
+        "city": sql_data.city,
+        "state": sql_data.state,
+        "phone": sql_data.phone,
+        "website": sql_data.website,
+        "facebook_link": sql_data.facebook_link,
+        "seeking_talent": sql_data.seeking_talent,
+        "seeking_description": sql_data.seeking_description,
+        "image_link": sql_data.image_link,
+        "past_shows": [],
+        "upcoming_shows": [],
+        "past_shows_count": sql_data.past_shows_count,
+        "upcoming_shows_count": sql_data.upcoming_shows_count
+    }
+
+    parse_genres(venue["genres"])
+
+    return render_template('pages/show_venue.html', venue=venue)
 
 
 #  Create Venue
@@ -322,30 +368,7 @@ def show_artist(artist_id):
         "upcoming_shows_count": sql_data.upcoming_shows_count
     }
 
-    token_builder = ""
-    for genre_char in sql_data.genres:
-        if genre_char == "{" or genre_char == "}":
-            continue
-        elif genre_char == ",":
-            artist["genres"].append(token_builder)
-            token_builder = ""
-        else:
-            token_builder = token_builder + genre_char
-
-    for show in sql_data.upcoming_shows:
-        show_to_add = {
-            "venue_id": show.venue_id,
-            "venue_name": show.venue_name,
-            "venue_image_link": show.venue_image_link,
-            "start_time": show.start_time
-        }
-
-        if show.start_time < datetime.today():
-            artist["past_shows"].append(show_to_add)
-        else:
-            artist["upcoming_shows"].append(show_to_add)
-        pass
-    pass
+    parse_genres(artist["genres"])
 
     return render_template('pages/show_artist.html', artist=artist)
 
@@ -518,44 +541,22 @@ def create_artist_submission():
 @app.route('/shows')
 def shows():
     # displays list of shows at /shows
-    # TODO: replace with real venues data.
-    #       num_shows should be aggregated based on number of upcoming shows per venue.
-    data = [{
-        "venue_id": 1,
-        "venue_name": "The Musical Hop",
-        "artist_id": 4,
-        "artist_name": "Guns N Petals",
-        "artist_image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-        "start_time": "2019-05-21T21:30:00.000Z"
-    }, {
-        "venue_id": 3,
-        "venue_name": "Park Square Live Music & Coffee",
-        "artist_id": 5,
-        "artist_name": "Matt Quevedo",
-        "artist_image_link": "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-        "start_time": "2019-06-15T23:00:00.000Z"
-    }, {
-        "venue_id": 3,
-        "venue_name": "Park Square Live Music & Coffee",
-        "artist_id": 6,
-        "artist_name": "The Wild Sax Band",
-        "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-        "start_time": "2035-04-01T20:00:00.000Z"
-    }, {
-        "venue_id": 3,
-        "venue_name": "Park Square Live Music & Coffee",
-        "artist_id": 6,
-        "artist_name": "The Wild Sax Band",
-        "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-        "start_time": "2035-04-08T20:00:00.000Z"
-    }, {
-        "venue_id": 3,
-        "venue_name": "Park Square Live Music & Coffee",
-        "artist_id": 6,
-        "artist_name": "The Wild Sax Band",
-        "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-        "start_time": "2035-04-15T20:00:00.000Z"
-    }]
+    data = []
+
+    for show_data in Show.query.all():
+        show = {
+            "id": show_data.id,
+            "venue_id": show_data.venue_id,
+            "venue_name": show_data.venue_name,
+            "artist_id": show_data.artist_id,
+            "artist_name": show_data.artist_name,
+            "artist_image_link": show_data.artist_image_link,
+            "start_time": show_data.start_time
+        }
+
+        data.append(show)
+    pass
+
     return render_template('pages/shows.html', shows=data)
 
 
@@ -569,14 +570,108 @@ def create_shows():
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
     # called to create new shows in the db, upon submitting new show listing form
-    # TODO: insert form data as a new Show record in the db, instead
+    error = False
+    data = request.form
 
-    # on successful db insert, flash success
-    flash('Show was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Show could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+    try:
+        show = Show(artist_id=data['artist_id'], venue_id=data['venue_id'], start_time=data['start_time'])
+        artist = Artist.query.get(show.artist_id)
+        venue = Venue.query.get(show.venue_id)
+
+        show.artist_name = artist.name
+        show.artist_image_link = artist.image_link
+        show.venue_name = venue.name
+
+        if datetime.strptime(show.start_time, "%Y-%m-%d %H:%M:%S") >= datetime.now():
+            artist.upcoming_shows.append(show)
+            if artist.upcoming_shows_count is None:
+                artist.upcoming_shows_count = 1
+            else:
+                artist.upcoming_shows_count += 1
+
+            venue.upcoming_shows.append(show)
+            if venue.upcoming_shows_count is None:
+                venue.upcoming_shows_count = 1
+            else:
+                venue.upcoming_shows_count += 1
+        else:
+            artist.past_shows.append(show)
+            if artist.past_shows_count is None:
+                artist.past_shows_count = 1
+            else:
+                artist.past_shows_count += 1
+
+            venue.past_shows.append(show)
+            if venue.past_shows_count is None:
+                venue.past_shows_count = 1
+            else:
+                venue.past_shows_count += 1
+
+        db.session.add(show)
+        db.session.add(artist)
+        db.session.add(venue)
+        db.session.commit()
+    except:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+
+    if error:
+        # on unsuccessful db insert, flash an error instead.
+        flash('An error occurred. Show could not be listed.')
+    else:
+        # on successful db insert, flash success
+        flash('Show was successfully listed!')
+
     return render_template('pages/home.html')
+
+
+@app.route('/shows/<int:show_id>', methods=['DELETE'])
+def delete_show(show_id):
+    try:
+        show = Show.query.get(show_id)
+
+        db.session.delete(show)
+        db.session.commit()
+    except:
+        db.session.rollback()
+    finally:
+        db.session.close()
+
+    return redirect(url_for('shows'))
+
+
+# Utilities
+# ===========================================================
+
+def parse_genres(genre_list):
+    """
+    Will parse the genre SQL Array into a list of Python strings
+    :param genre_list: the list of genres given
+    :return: true if no error, false if there was an error
+    """
+    error = False
+
+    try:
+        token_builder = ""
+        for genre_char in genre_list:
+            if genre_char == "{":
+                continue
+            elif genre_char == "}" and token_builder != "":
+                genre_list.append(token_builder)
+            elif genre_char == ",":
+                genre_list.append(token_builder)
+                token_builder = ""
+            else:
+                token_builder = token_builder + genre_char
+            pass
+        pass
+    except:
+        error = True
+
+    return not error
 
 
 @app.errorhandler(404)
