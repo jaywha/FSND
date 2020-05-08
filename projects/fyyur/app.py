@@ -244,7 +244,19 @@ def show_venue(venue_id):
         "upcoming_shows_count": sql_data.upcoming_shows_count
     }
 
-    parse_genres(venue["genres"])
+    token_builder = ""
+    for genre_char in sql_data.genres:
+        if genre_char == "{":
+            continue
+        elif genre_char == "}" and token_builder != "":
+            venue["genres"].append(token_builder)
+        elif genre_char == ",":
+            venue["genres"].append(token_builder)
+            token_builder = ""
+        else:
+            token_builder = token_builder + genre_char
+        pass
+    pass
 
     return render_template('pages/show_venue.html', venue=venue)
 
@@ -266,7 +278,7 @@ def create_venue_submission():
     try:
         venue = Venue(name=data['name'], city=data['city'], state=data['state'],
                       address=data['address'], phone=data['phone'], genres=data.getlist('genres'),
-                      facebook_link=data['facebook_link'])
+                      facebook_link=data['facebook_link'], image_link=data['image_link'])
         db.session.add(venue)
         db.session.commit()
     except:
@@ -368,7 +380,19 @@ def show_artist(artist_id):
         "upcoming_shows_count": sql_data.upcoming_shows_count
     }
 
-    parse_genres(artist["genres"])
+    token_builder = ""
+    for genre_char in sql_data.genres:
+        if genre_char == "{":
+            continue
+        elif genre_char == "}" and token_builder != "":
+            artist["genres"].append(token_builder)
+        elif genre_char == ",":
+            artist["genres"].append(token_builder)
+            token_builder = ""
+        else:
+            token_builder = token_builder + genre_char
+        pass
+    pass
 
     return render_template('pages/show_artist.html', artist=artist)
 
@@ -426,6 +450,8 @@ def edit_artist_submission(artist_id):
         artist.phone = data["phone"]
         artist.genres = data.getlist("genres")
         artist.facebook_link = data["facebook_link"]
+        artist.image_link = data['image_link']
+        artist.website = data['website']
         db.session.commit()
     except:
         error = True
@@ -517,7 +543,7 @@ def create_artist_submission():
     try:
         artist = Artist(name=data['name'], city=data['city'],
                         state=data['state'], phone=data['phone'], genres=data.getlist('genres'),
-                        facebook_link=data['facebook_link'])
+                        facebook_link=data['facebook_link'], image_link=data['image_link'], website=data['website'])
         db.session.add(artist)
         db.session.commit()
     except:
@@ -609,8 +635,6 @@ def create_show_submission():
                 venue.past_shows_count += 1
 
         db.session.add(show)
-        db.session.add(artist)
-        db.session.add(venue)
         db.session.commit()
     except:
         error = True
@@ -664,33 +688,6 @@ def delete_show(show_id):
 
 # Utilities
 # ===========================================================
-
-def parse_genres(genre_list):
-    """
-    Will parse the genre SQL Array into a list of Python strings
-    :param genre_list: the list of genres given
-    :return: true if no error, false if there was an error
-    """
-    error = False
-
-    try:
-        token_builder = ""
-        for genre_char in genre_list:
-            if genre_char == "{":
-                continue
-            elif genre_char == "}" and token_builder != "":
-                genre_list.append(token_builder)
-            elif genre_char == ",":
-                genre_list.append(token_builder)
-                token_builder = ""
-            else:
-                token_builder = token_builder + genre_char
-            pass
-        pass
-    except:
-        error = True
-
-    return not error
 
 
 @app.errorhandler(404)
