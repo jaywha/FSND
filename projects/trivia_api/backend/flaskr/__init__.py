@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 from flask import Flask, request, abort, jsonify, render_template
@@ -15,14 +16,25 @@ def create_app(test_config=None):
     app = Flask(__name__)
     db = setup_db(app)
     CORS(app, resources={r"/api/*": {"origins": "*"}})
+    logging.getLogger('flask_cors').level = logging.DEBUG
 
     @app.after_request
     def after_request(response):
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'X-Requested-With')
         response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS')
         return response
 
-    @app.route('/categories/<int:category>/questions', methods=['GET'])
+    @app.route('/categories/', methods=['GET'])
+    def get_categories():
+        categories = Category.query.all()
+        formated_categories = [category.format() for category in categories]
+
+        return jsonify({
+            'categories': formated_categories
+        })
+
+    @app.route('/categories/<int:category>/questions/', methods=['GET'])
     def get_questions_in(category):
         """
         Create an endpoint to handle GET requests
@@ -30,37 +42,14 @@ def create_app(test_config=None):
         :param category: path parameter converted into an int
         :return: JSON with a list of questions, int count of all questions, and current category id
         """
-        start, end = get_questions_limit(request)
+        start, end, page = get_questions_limit(request)
         questions = Question.query.filter_by(category=category).order_by('id').all()
         formatted_questions = [question.format() for question in questions]
+        curr_cat = Category.query.get(category)
         return jsonify({
             'questions': formatted_questions[start:end],
             'total_questions': len(formatted_questions),
-            'current_category': Category.query.get(category).format()
-        })
-
-    @app.route('/questions/<category>/', methods=['GET'])
-    def get_questions_of(category):
-        """
-        Create a GET endpoint to get questions based on category.
-
-        :param category: string name of the category to get all questions of
-        :return: JSON with a list of questions, int count of all questions, and current category id
-        """
-
-        '''
-        TEST: In the "List" tab / main screen, clicking on one of the 
-        categories in the left column will cause only questions of that 
-        category to be shown. 
-        '''
-        start, end = get_questions_limit(request)
-        category_id = Category.query.filter_by(type=category).all()
-        questions = Question.query.filter_by(category=category_id[0]).order_by('id').all()
-        formatted_questions = [question.format() for question in questions]
-        return jsonify({
-            'questions': formatted_questions[start:end],
-            'total_questions': len(formatted_questions),
-            'current_category': category
+            'current_category': curr_cat.format()
         })
 
     @app.route('/questions/', methods=['GET'])
@@ -81,18 +70,23 @@ def create_app(test_config=None):
         Clicking on the page numbers should update the questions. 
         '''
 
-        start, end = get_questions_limit(request)
+        start, end, page = get_questions_limit(request)
         questions = Question.query.all()
         categories = Category.query.order_by('id').all()
         formatted_questions = [question.format() for question in questions]
         all_categories = [category.format() for category in categories]
-        return jsonify({
+        result = jsonify({
             'questions': formatted_questions[start:end],
-            'total_questions': len(formatted_questions),
-            'categories': all_categories
+            'totalQuestions': len(formatted_questions),
+            'categories': all_categories,
+            'page': page,
+            'currentCategory': all_categories[0]
         })
 
-    @app.route('/questions/<int:question_id>', methods=['DELETE'])
+        print(result)
+        return result
+
+    @app.route('/questions/<int:question_id>/', methods=['DELETE'])
     def delete_question(question_id):
         """
         Create an endpoint to DELETE question using a question ID.
@@ -156,7 +150,7 @@ def create_app(test_config=None):
                 'success': True
             })
 
-    @app.route('/questions/', methods=['POST'])
+    @app.route('/questions/search/', methods=['POST'])
     def search_questions():
         """
         Create a POST endpoint to get questions based on a search term.
@@ -170,23 +164,20 @@ def create_app(test_config=None):
         only question that include that string within their question. 
         Try using the word "title" to start. 
         '''
-        start, end = get_questions_limit(request)
-        searchTerm = request.get_json()['searchTerm']
-        sqlSearchTerm = '%{}%'.format(searchTerm)
-        filteredQuestions = Question.query.filter(Question.question.like(sqlSearchTerm)).all()
+        start, end, page = get_questions_limit(request)
+        search_term = request.get_json()['searchTerm']
+        sql_search_term = '%{}%'.format(search_term)
+        filtered_questions = Question.query.filter(Question.question.like(sql_search_term)).all()
 
-        categories = Category.query.order_by('id').all()
-        formatted_questions = [question.format() for question in filteredQuestions]
-        all_categories = [category.format() for category in categories]
+        formatted_questions = [question.format() for question in filtered_questions]
 
         return jsonify({
             'questions': formatted_questions[start:end],
-            'total_questions': len(formatted_questions),
-            'categories': all_categories
+            'total_questions': len(formatted_questions)
         })
 
-    @app.route('/questions/')
-    def get_quiz():
+    @app.route('/quizzes/', methods=['POST'])
+    def get_quizzes():
         """
         Create a POST endpoint to get questions to play the quiz.
         This endpoint should take category and previous question parameters
@@ -200,7 +191,23 @@ def create_app(test_config=None):
         one question at a time is displayed, the user is allowed to answer
         and be shown whether they were correct or not. 
         '''
-        return jsonify({})
+        prev_question_ids = request.get_json()['previous_questions']
+        curr_category = request.get_json()['quiz_category']
+        curr_category_questions = \
+            Question.query.filter_by(category=curr_category['id']).order_by('id').all()
+        rand_index = random.randint(0, len(curr_category_questions)-1)
+        print("\nGot " + str(rand_index) + " from range [0, " + str(len(curr_category_questions)-1) + ']\n')
+        next_question = curr_category_questions[rand_index]
+        print(next_question)
+
+        if len(prev_question_ids) != 0:
+            while next_question.id in prev_question_ids:
+                rand_index = random.randint(0, len(curr_category_questions)-1)
+                next_question = curr_category_questions[rand_index]
+
+        return jsonify({
+          'question': next_question.format()
+        })
 
     @app.errorhandler(404)
     def not_found(error):
@@ -232,4 +239,4 @@ def get_questions_limit(passed_request):
     page = passed_request.args.get('page', 1, type=int)
     start = (page - 1) * QUESTIONS_PER_PAGE
     end = start + QUESTIONS_PER_PAGE
-    return start, end
+    return start, end, page
