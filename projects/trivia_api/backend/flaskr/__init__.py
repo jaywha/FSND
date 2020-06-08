@@ -193,20 +193,33 @@ def create_app(test_config=None):
         '''
         prev_question_ids = request.get_json()['previous_questions']
         curr_category = request.get_json()['quiz_category']
+        cat_id = curr_category['id']
+
+        print("Current Category ID: "+str(cat_id))
+
         curr_category_questions = \
-            Question.query.filter_by(category=curr_category['id']).order_by('id').all()
+            (Question.query.filter_by(category=int(cat_id)).order_by('id').all(),
+             Question.query.order_by('id').all())[cat_id == 0]
+
+        if len(prev_question_ids) == len(curr_category_questions) or len(curr_category_questions) == 0:
+            return jsonify({
+                'question': None
+            })
+
         rand_index = random.randint(0, len(curr_category_questions)-1)
-        print("\nGot " + str(rand_index) + " from range [0, " + str(len(curr_category_questions)-1) + ']\n')
+        # print("\nGot " + str(rand_index) + " from range [0, " + str(len(curr_category_questions)-1) + ']\n')
         next_question = curr_category_questions[rand_index]
-        print(next_question)
+        # print(next_question)
 
         if len(prev_question_ids) != 0:
             while next_question.id in prev_question_ids:
                 rand_index = random.randint(0, len(curr_category_questions)-1)
                 next_question = curr_category_questions[rand_index]
 
+        next_question = next_question.format()
+
         return jsonify({
-          'question': next_question.format()
+          'question': next_question
         })
 
     @app.errorhandler(404)

@@ -3,7 +3,7 @@ import $ from 'jquery';
 
 import '../stylesheets/QuizView.css';
 
-const questionsPerPlay = 5; 
+const questionsPerPlay = 3;
 
 class QuizView extends Component {
   constructor(props){
@@ -106,7 +106,7 @@ class QuizView extends Component {
                   {Object.keys(this.state.categories).map(id => {
                   return (
                     <div
-                      key={id}
+                      key={id-1}
                       value={id}
                       className="play-category"
                       onClick={() => this.selectCategory({type:this.state.categories[id].type, id})}>
