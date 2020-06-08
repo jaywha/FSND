@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Button from 'react-bootstrap/Button';
 
 import '../stylesheets/App.css';
 import Question from './Question';
@@ -13,7 +14,7 @@ class QuestionView extends Component {
       questions: [],
       page: 1,
       totalQuestions: 0,
-      categories: [],
+      categories: {},
       currentCategory: null
     }
   }
@@ -127,12 +128,17 @@ class QuestionView extends Component {
         <div className="categories-list">
           <h2 onClick={() => {this.getQuestions()}}>Categories</h2>
           <ul>
-            {Object.keys(this.state.categories).map((id, ) => (
-              <li key={id} onClick={() => {this.getByCategory(id)}}>
-                {this.state.categories[id].type}
-                <img className="category" src={`${this.state.categories[id].type}.svg`}/>
-              </li>
-            ))}
+            {Object.keys(this.state.categories).map((id, ) => {
+              return id !== '0' ? (
+                <li key={id} onClick={() => {this.getByCategory(id)}}>
+                  <Button>
+                  {this.state.categories[id].type}
+                  <img className="category"
+                       alt={`${this.state.categories[id].type}`} src={`${this.state.categories[id].type}.svg`}/>
+                   </Button>
+                </li>
+              ) : null;
+            })}
           </ul>
           <Search submitSearch={this.submitSearch}/>
         </div>

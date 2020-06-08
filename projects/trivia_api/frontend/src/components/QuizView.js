@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Button from 'react-bootstrap/Button';
 import $ from 'jquery';
 
 import '../stylesheets/QuizView.css';
@@ -12,7 +13,7 @@ class QuizView extends Component {
         quizCategory: null,
         previousQuestions: [], 
         showAnswer: false,
-        categories: {},
+        categories: [],
         numCorrect: 0,
         currentQuestion: {},
         guess: '',
@@ -77,7 +78,7 @@ class QuizView extends Component {
 
   submitGuess = (event) => {
     event.preventDefault();
-    const formatGuess = this.state.guess.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase()
+    // const formatGuess = this.state.guess.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").toLowerCase()
     let evaluate =  this.evaluateAnswer()
     this.setState({
       numCorrect: !evaluate ? this.state.numCorrect : this.state.numCorrect + 1,
@@ -102,17 +103,17 @@ class QuizView extends Component {
           <div className="quiz-play-holder">
               <div className="choose-header">Choose Category</div>
               <div className="category-holder">
-                  <div className="play-category" onClick={this.selectCategory}>ALL</div>
+                  <div className="play-category" onClick={this.selectCategory}><Button>ALL</Button></div>
                   {Object.keys(this.state.categories).map(id => {
-                  return (
+                  return this.state.categories[id].type !== 'PLACEHOLDER' ? (
                     <div
-                      key={id-1}
+                      key={id}
                       value={id}
                       className="play-category"
                       onClick={() => this.selectCategory({type:this.state.categories[id].type, id})}>
-                      {this.state.categories[id].type}
+                        <Button>{this.state.categories[id].type}</Button>
                     </div>
-                  )
+                  ) : null;
                 })}
               </div>
           </div>
@@ -129,13 +130,13 @@ class QuizView extends Component {
   }
 
   evaluateAnswer = () => {
-    const formatGuess = this.state.guess.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase()
+    const formatGuess = this.state.guess.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").toLowerCase()
     const answerArray = this.state.currentQuestion.answer.toLowerCase().split(' ');
     return answerArray.includes(formatGuess)
   }
 
   renderCorrectAnswer(){
-    const formatGuess = this.state.guess.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase()
+    // const formatGuess = this.state.guess.replace(/[.,\/#!$%^&*;:{}=\-_`~()]/g,"").toLowerCase()
     let evaluate =  this.evaluateAnswer()
     return(
       <div className="quiz-play-holder">

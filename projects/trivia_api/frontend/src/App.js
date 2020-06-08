@@ -11,6 +11,7 @@ import FormView from './components/FormView';
 import QuestionView from './components/QuestionView';
 import Header from './components/Header';
 import QuizView from './components/QuizView';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 class App extends Component {

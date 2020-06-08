@@ -22,7 +22,17 @@ def setup_db(app, db_path=database_path):
     db.app = app
     db.init_app(app)
     db.create_all()
+    fix_category_index_error()
     return db
+
+
+def fix_category_index_error():
+    placeholder = Category.query.filter_by(id=0).first()
+    if not placeholder:
+        dummy_cat = Category("PLACEHOLDER")
+        dummy_cat.id = 0
+        db.session.add(dummy_cat)
+        db.session.commit()
 
 
 '''

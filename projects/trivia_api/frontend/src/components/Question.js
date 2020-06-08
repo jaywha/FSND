@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Button from 'react-bootstrap/Button';
 import '../stylesheets/Question.css';
 
 class Question extends Component {
@@ -19,14 +20,16 @@ class Question extends Component {
       <div className="Question-holder">
         <div className="Question">{question}</div>
         <div className="Question-status">
-          <img className="category" src={`${category.type}.svg`}/>
+          <img className="category" alt={`${category.type}`} src={`${category.type}.svg`}/>
           <div className="difficulty">Difficulty: {difficulty}</div>
-          <img src="delete.png" className="delete" onClick={() => this.props.questionAction('DELETE')}/>
+          <img src="delete.png" alt="&cross;" className="delete" onClick={() => this.props.questionAction('DELETE')}/>
           
         </div>
-        <div className="show-answer button"
+        <div className="show-answer"
             onClick={() => this.flipVisibility()}>
-            {this.state.visibleAnswer ? 'Hide' : 'Show'} Answer
+            <Button>
+                {this.state.visibleAnswer ? 'Hide' : 'Show'} Answer
+            </Button>
           </div>
         <div className="answer-holder">
           <span style={{"visibility": this.state.visibleAnswer ? 'visible' : 'hidden'}}>Answer: {answer}</span>

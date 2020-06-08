@@ -5,7 +5,7 @@ import '../stylesheets/FormView.css';
 
 class FormView extends Component {
   constructor(props){
-    super();
+    super(props);
     this.state = {
       question: "",
       answer: "",
@@ -90,9 +90,9 @@ class FormView extends Component {
             Category
             <select name="category" onChange={this.handleChange}>
               {Object.keys(this.state.categories).map(id => {
-                  return (
+                  return this.state.categories[id].type !== 'PLACEHOLDER' ? (
                     <option key={id} value={id}>{this.state.categories[id].type}</option>
-                  )
+                  ) : null
                 })}
             </select>
           </label>
