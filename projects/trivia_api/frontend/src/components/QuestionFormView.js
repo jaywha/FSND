@@ -3,7 +3,7 @@ import $ from 'jquery';
 
 import '../stylesheets/FormView.css';
 
-class FormView extends Component {
+class QuestionFormView extends Component {
   constructor(props){
     super(props);
     this.state = {
@@ -103,4 +103,4 @@ class FormView extends Component {
   }
 }
 
-export default FormView;
+export default QuestionFormView;

@@ -97,3 +97,28 @@ class Category(db.Model):
             'id': self.id,
             'type': self.type
         }
+
+
+'''
+User
+
+'''
+
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    scores = Column(String)
+
+    def __init__(self, type):
+        self.type = type
+
+    def format(self):
+        return {
+            'id': self.id,
+            'type': self.type,
+            'scores': self.scores
+        }
+

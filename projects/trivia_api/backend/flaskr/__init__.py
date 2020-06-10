@@ -34,6 +34,41 @@ def create_app(test_config=None):
             'categories': formated_categories
         })
 
+    @app.route('/categories/', methods=['POST'])
+    def create_category():
+        """
+        Create an endpoint to POST a new category,
+        which will require just a new category name.
+
+        :return: boolean success
+        """
+        '''
+        TEST: When you submit a category on the "Add Category" tab, 
+        the form will clear and the category will appear on the left side of the last page
+        of the category list in the "List" tab.  
+        '''
+        error = False
+
+        try:
+            new_category = Category(
+                request.get_json()['category']
+            )
+            db.session.add(new_category)
+            db.session.commit()
+        except:
+            error = True
+            db.session.rollback()
+            print(sys.exc_info())
+        finally:
+            db.session.close()
+
+            if error:
+                abort(400)
+            else:
+                return jsonify({
+                    'success': True
+                })
+
     @app.route('/categories/<int:category>/questions/', methods=['GET'])
     def get_questions_in(category):
         """
@@ -198,7 +233,7 @@ def create_app(test_config=None):
         print("Current Category ID: "+str(cat_id))
 
         curr_category_questions = \
-            (Question.query.filter_by(category=int(cat_id)).order_by('id').all(),
+            (Question.query.filter_by(category=int(cat_id)+1).order_by('id').all(),
              Question.query.order_by('id').all())[cat_id == 0]
 
         if len(prev_question_ids) == len(curr_category_questions) or len(curr_category_questions) == 0:
