@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import Button from 'react-bootstrap/Button';
+import Tooltip from 'react-bootstrap/Tooltip';
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import '../stylesheets/Question.css';
+import "bootstrap/dist/css/bootstrap.css";
 
 class Question extends Component {
   constructor(){
@@ -16,13 +19,18 @@ class Question extends Component {
 
   render() {
     const { question, answer, category, difficulty } = this.props;
+
     return (
       <div className="Question-holder">
         <div className="Question">{question}</div>
         <div className="Question-status">
           <img className="category" alt={`${category.type}`} src={`${category.type}.svg`}/>
           <div className="difficulty">Difficulty: {difficulty}</div>
-          <img src="delete.png" alt="&cross;" className="delete" onClick={() => this.props.questionAction('DELETE')}/>
+          <OverlayTrigger overlay={
+              <Tooltip id="delete-tooltip">Delete Question</Tooltip>
+          } placement="bottom">
+            <img src="delete.png" alt="&cross;" className="delete" onClick={() => this.props.questionAction('DELETE')}/>
+          </OverlayTrigger>
           
         </div>
         <div className="show-answer"

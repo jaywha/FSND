@@ -5,6 +5,7 @@ from flask import Flask, request, abort, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
+import base64
 
 from models import setup_db, Question, Category
 
@@ -49,9 +50,11 @@ def create_app(test_config=None):
         '''
         error = False
 
+        category_name = request.get_json()['category']
+
         try:
             new_category = Category(
-                request.get_json()['category']
+                category_name
             )
             db.session.add(new_category)
             db.session.commit()
@@ -80,7 +83,8 @@ def create_app(test_config=None):
         start, end, page = get_questions_limit(request)
         questions = Question.query.filter_by(category=category).order_by('id').all()
         formatted_questions = [question.format() for question in questions]
-        curr_cat = Category.query.get(category)
+        curr_cat = Category.query.get(category-1)
+        # print('Current category id: ' + str(category) + ' vs. ' + str(curr_cat.id))
         return jsonify({
             'questions': formatted_questions[start:end],
             'total_questions': len(formatted_questions),
@@ -143,7 +147,7 @@ def create_app(test_config=None):
         finally:
             db.session.close()
         return jsonify({
-            success
+            'success': True
         })
 
     @app.route('/questions/', methods=['POST'])
@@ -288,3 +292,13 @@ def get_questions_limit(passed_request):
     start = (page - 1) * QUESTIONS_PER_PAGE
     end = start + QUESTIONS_PER_PAGE
     return start, end, page
+
+
+def print_list(img_as_list):
+    """
+    Print each element list
+
+    :param img_as_list:
+    """
+    for element in img_as_list:
+        print(element)

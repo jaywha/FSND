@@ -8,7 +8,8 @@ class CategoryFormView extends Component {
     super(props);
     this.state = {
       category: ""
-    }
+    };
+    this.onDrop = this.onDrop.bind(this);
   }
 
   submitCategory = (event) => {
@@ -37,7 +38,9 @@ class CategoryFormView extends Component {
   }
 
   handleChange = (event) => {
-    this.setState({[event.target.name]: event.target.value})
+    this.setState({
+        [event.target.name]: event.target.value
+    });
   }
 
   render() {
