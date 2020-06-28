@@ -8,7 +8,7 @@ database_user = "jayw6"
 database_pass = base64.b64decode('anVzdDRtZQ=='.encode('ascii')).decode('ascii')
 database_URLPort = 'localhost:5432'
 database_name = "trivia"
-database_path = "postgres://{}:{}@{}/{}".format(database_user, database_pass, database_URLPort, database_name)
+database_path = "postgresql://{}:{}@{}/{}".format(database_user, database_pass, database_URLPort, database_name)
 
 db = SQLAlchemy()
 
