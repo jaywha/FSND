@@ -33,9 +33,9 @@ class Question extends Component {
           </OverlayTrigger>
           
         </div>
-        <div className="show-answer"
+        <div className="show-answer">
+            <Button
             onClick={() => this.flipVisibility()}>
-            <Button>
                 {this.state.visibleAnswer ? 'Hide' : 'Show'} Answer
             </Button>
           </div>

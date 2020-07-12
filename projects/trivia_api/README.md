@@ -4,41 +4,72 @@
 
 Udacity is invested in creating bonding experiences for its employees and students. A bunch of team members got the idea to hold trivia on a regular basis and created a  webpage to manage the trivia app and play the game, but their API experience is limited and still needs to be built out. 
 
-That's where you come in! Help them finish the trivia app so they can start holding trivia and seeing who's the most knowledgeable of the bunch. The application must:
+The application:
 
-1) Display questions - both all questions and by category. Questions should show the question, category and difficulty rating by default and can show/hide the answer. 
-2) Delete questions.
-3) Add questions and require that they include question and answer text.
-4) Search for questions based on a text query string.
-5) Play the quiz game, randomizing either all questions or within a specific category. 
-
-Completing this trivia app will give you the ability to structure plan, implement, and test an API - skills essential for enabling your future applications to communicate with others. 
-
-## Tasks
-
-There are `TODO` comments throughout project. Start by reading the READMEs in:
-
-1. [`./frontend/`](frontendEADME.md)
-2. [`./backend/`](backendEADME.md)
-
-We recommend following the instructions in those files in order. This order will look familiar from our prior work in the course.
-
-## Starting and Submitting the Project
-
-[Fork](https://help.github.com/en/articles/fork-a-repo) the [project repository]() and [Clone](https://help.github.com/en/articles/cloning-a-repository) your forked repository to your machine. Work on the project locally and make sure to push all your changes to the remote repository before submitting the link to your repository in the Classroom. 
+1) Displays questions - both all questions and by category. Questions should show the question, category and difficulty rating by default and can show/hide the answer. 
+2) Deletes questions.
+3) Adds questions and require that they include question and answer text.
+4) Searches for questions based on a text query string.
+5) Plays the quiz game, randomizing either all questions or within a specific category.   
 
 ## About the Stack
 
-We started the full stack application for you. It is desiged with some key functional areas:
+|  database  | backend | frontend |
+|:----------:|:-------:|:--------:|
+| [PostgreSQL](https://bit.ly/3emfbO2) | [Flask](https://bit.ly/3iNJuAV) | [React.js](https://reactjs.org/) |
+
+- Object Relational Mapping (ORM)
+    - [SQLAlchemy](https://www.sqlalchemy.org/)
+    - [Alembic](https://alembic.sqlalchemy.org/en/latest/front.html#project-homepage)
 
 ### Backend
 
-The `./backend` directory contains a partially completed Flask and SQLAlchemy server. You will work primarily in app.py to define your endpoints and can reference models.py for DB and SQLAlchemy setup. 
+The `./backend` directory contains a completed Flask and SQLAlchemy server.  
+To start it, go to the `./backend` directory and run:
+```bash
+export FLASK_APP=flaskr.__init__.py
+export FLASK_ENV=development
+flask run
+```
+
+If you're on Windows, go to the `./backend` directory and run:
+```batch
+SET FLASK_APP="flaskr.__init__.py"
+SET FLASK_ENV="development"
+py -m flask run
+```
+
+[View the README.md within ./backend for more details.](./backend/README.md)
 
 ### Frontend
 
-The `./frontend` directory contains a complete React frontend to consume the data from the Flask server. You will need to update the endpoints after you define them in the backend. Those areas are marked with TODO and can be searched for expediency. 
+The `./frontend` directory contains a complete React frontend to consume the data from the Flask server.
+I edited a few pieces of the frontend using [react-bootstrap](https://www.npmjs.com/package/react-bootstrap).
 
-Pay special attention to what data the frontend is expecting from each API response to help guide how you format your API. 
+- Windows: [start.bat](./frontend/start.bat)  
+- Linux | macOS: [start.sh](./frontend/start.sh) 
 
-[View the README.md within ./frontend for more details.](frontendEADME.md)
+[View the README.md within ./frontend for more details.](./frontend/README.md)
+
+### Postman API Docs
+
+[View the docs for the API here](https://documenter.getpostman.com/view/8697082/SzzkbGb4?version=latest)
+
+## Submission Criteria
+
+### Code Quality & Documentation
+- [x] Write Clear, concise and well-documented code
+- [x] Write an informative README.md
+- [x] Leverage Environment Controls
+
+### Handling HTTP Requests
+- [x] Follow RESTful principles
+- [x] Utilize multiple HTTP request methods
+- [x] Handle common errors
+
+### API Testing & Documentation
+- [x] Use unittest to test flask application for expected behavior
+- [x] Demonstrate validity of API responses
+
+### Bonus
+- [x] Add capability to create new categories.

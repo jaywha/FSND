@@ -28,11 +28,17 @@ def create_app(test_config=None):
 
     @app.route('/categories/', methods=['GET'])
     def get_categories():
+        """
+        GET Route for selecting all categories in the database
+
+        :return: a JSON object with a categories list attribute filled with DB data
+        """
+
         categories = Category.query.all()
-        formated_categories = [category.format() for category in categories]
+        formatted_categories = [category.format() for category in categories]
 
         return jsonify({
-            'categories': formated_categories
+            'categories': formatted_categories
         })
 
     @app.route('/categories/', methods=['POST'])
@@ -49,6 +55,11 @@ def create_app(test_config=None):
         of the category list in the "List" tab.  
         '''
         error = False
+
+        if request is None or request.get_json() is None:
+            return jsonify({
+                'success': False
+            })
 
         category_name = request.get_json()['category']
 
@@ -237,7 +248,7 @@ def create_app(test_config=None):
         print("Current Category ID: "+str(cat_id))
 
         curr_category_questions = \
-            (Question.query.filter_by(category=int(cat_id)+1).order_by('id').all(),
+            (Question.query.filter_by(category=str(int(cat_id)+1)).order_by('id').all(),
              Question.query.order_by('id').all())[cat_id == 0]
 
         if len(prev_question_ids) == len(curr_category_questions) or len(curr_category_questions) == 0:

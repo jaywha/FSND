@@ -1,3 +1,4 @@
+import datetime
 import os
 import unittest
 import json
@@ -16,9 +17,9 @@ class TriviaTestCase(unittest.TestCase):
         self.app = create_app()
         self.client = self.app.test_client
         self.database_user = "jayw6"
-        self.database_pass = base64.b64decode('anVzdDRtZQ=='.encode('ascii')).decode('ascii')
+        self.database_pass = base64.b64decode('cm9vdHNxbA=='.encode('ascii')).decode('ascii')
         self.database_URLPort = 'localhost:5432'
-        self.database_name = "trivia"
+        self.database_name = "trivia_test"
         self.database_path = "postgresql://{}:{}@{}/{}"\
             .format(self.database_user, self.database_pass, self.database_URLPort, self.database_name)
         setup_db(self.app, self.database_path)
@@ -43,14 +44,27 @@ class TriviaTestCase(unittest.TestCase):
     # region Question Tests
     def test_create_question(self):
         new_question = {
-            'question': 'Is this a test?',
-            'answer': 'Yes',
+            'question': 'What is this, a test?',
+            'answer': 'test',
             'category': 1,
             'difficulty': 5
         }
+        questions_before_push = self.client().get('/questions/').json["questions"]
+        print("q_before:\n " + json.dumps(questions_before_push, indent=2))
+
         res = self.client().post('/questions/', json=new_question)
+        new_question['category'] = str(new_question['category'])
+        if questions_before_push is None or len(questions_before_push) == 0:
+            new_question['id'] = 1
+        else:
+            new_question['id'] = questions_before_push[-1]['id'] + 1
+        questions_before_push.append(new_question)
+
+        questions_after_push = self.client().get('/questions/').json["questions"]
+        print("q_after:\n " + json.dumps(questions_after_push, indent=2))
 
         self.assertEqual(res.status_code, 200)
+        self.assertListEqual(questions_before_push, questions_after_push)
         pass
 
     def test_get_questions(self):
@@ -64,37 +78,69 @@ class TriviaTestCase(unittest.TestCase):
         pass
 
     def test_delete_question(self):
-        res = self.client().delete('/questions/0/')
+        question = (Question.query.filter_by(answer="test").first())
+        if not bool(question):
+            self.assertTrue(True)
+            print("No test question(s) to delete")
+        else:
+            print("delete question when answer is just yes: " + str(question.id))
+            res = self.client().delete('/questions/' + str(question.id) + '/')
 
-        self.assertEqual(res.status_code, 200)
+            self.assertEqual(res.status_code, 200)
         pass
 
     def test_search_questions(self):
-        res = self.client().get('/questions/search/', json={'searchTerm': 'What'})
+        res = self.client().post('/questions/search/', json={"searchTerm": "What"})
 
-        self.assertEquals(res.status_code, 200)
+        data = res.json
+        print("===== Data Returned =====\n" + json.dumps(data, indent=2))
+        print("=====   End Data   =====\n")
+
+        for token in data["questions"]:
+            self.assertTrue('what' in str(token).lower(), "The token didn't have 'what': "+str(token).lower())
+
+        self.assertEqual(res.status_code, 200)
         pass
     # endregion
 
     # region Category Tests
-    def test_CategoryCreate(self):
-        pass
-
-    def test_CategoryRead(self):
-        res = self.client().get('/categories/')
+    def test_create_category(self):
+        res = self.client().post('/categories/', json={"category": "TEST_PLACEHOLDER"+str(datetime.datetime.now())})
 
         self.assertEqual(res.status_code, 200)
         pass
 
-    def test_CategoryUpdate(self):
-        pass
+    def test_read_category(self):
+        res = self.client().get('/categories/')
 
-    def test_CategoryDelete(self):
+        print("===== Categories =====\n" + json.dumps(res.json, indent=2))
+        print("===== End Data =====")
+
+        self.assertEqual(res.status_code, 200)
         pass
     # endregion
 
-    def test_QuizPlay(self):
+    def test_play_quiz(self):
+        initial_json = {
+            "previous_questions": [],
+            "quiz_category": {
+                "id": 1,
+                "type": "Science"
+            }
+        }
+        res = self.client().post('/quizzes/', json=initial_json)
+        data = res.json
+
+        while data is not None and data["question"] is not None:
+            self.assertIsNotNone(data["question"]["question"], "Question data has no question")
+            self.assertIsNotNone(data["question"]["answer"], "Question data has no answer")
+            loop_json = initial_json["previous_questions"].append(str(data["question"]["id"]))
+            res = self.client().post('/quizzes/', json=loop_json)
+            data = res.json
+
+        self.assertEqual(res.status_code, 200)
         pass
+
 
 # Make the tests conveniently executable
 if __name__ == "__main__":

@@ -9,7 +9,6 @@ class CategoryFormView extends Component {
     this.state = {
       category: ""
     };
-    this.onDrop = this.onDrop.bind(this);
   }
 
   submitCategory = (event) => {
